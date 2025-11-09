@@ -1,0 +1,40 @@
+name: Deploy to Vercel and Email Link
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # Deploy to Vercel
+      - name: Deploy with Vercel Action
+        id: vercel
+        uses: amondnet/vercel-action@v25
+        with:
+          vercel-token: ${{ secrets.VERCEL_TOKEN }}
+          vercel-org-id: ${{ secrets.ORG_ID }}
+          vercel-project-id: ${{ secrets.PROJECT_ID }}
+          vercel-args: "--prod"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      # Send email with deployment link
+      - name: Send deployment link by email
+        uses: dawidd6/action-send-mail@v3
+        with:
+          server_address: smtp.gmail.com
+          server_port: 465
+          username: ${{ secrets.GMAIL_USER }}
+          password: ${{ secrets.GMAIL_PASS }}
+          subject: "Vercel deployment ready"
+          to: "hello@montaguepianos.co.uk, chappers.coldharbour@googlemail.com"
+          from: "Codex Game Bot <${{ secrets.GMAIL_USER }}>"
+          body: |
+            A new deployment is live:
+            ${{ steps.vercel.outputs.preview-url }}
+
